@@ -1,12 +1,12 @@
-from psycopg2.extensions import cursor
+from psycopg2.extensions import connection, cursor
 from pydantic import UUID4
 
-from models.entry import Entry, EntryType
+from models.entry import EntryIn, EntryOut, EntryType
 
 
 class EntriesController:
     @staticmethod
-    def get_entries(cur: cursor, entry_type: str | None = None) -> list[Entry]:
+    def get_entries(cur: cursor, entry_type: str | None = None) -> list[EntryOut]:
         if entry_type:
             cur.execute("SELECT * FROM entries WHERE entry_type = %s;", (entry_type,))
         else:
@@ -15,12 +15,11 @@ class EntriesController:
         return entries
 
     @staticmethod
-    def post_entry(
-        cur: cursor, entry_name: str, entry_type: EntryType
-    ) -> dict[str, UUID4]:
+    def post_entry(conn: connection, cur: cursor, entry: EntryIn) -> EntryOut:
         cur.execute(
-            "INSERT INTO entries (entry_name, entry_type) VALUES (%s, %s) RETURNING entry_uuid;",
-            (entry_name, entry_type),
+            "INSERT INTO entries (entry_name, entry_type) VALUES (%s, %s) RETURNING *;",
+            (entry.entry_name, entry.entry_type),
         )
-        response = cur.fetchone()
-        return response
+        conn.commit()
+        entry = cur.fetchone()
+        return entry
