@@ -1,6 +1,7 @@
 from psycopg2.extensions import cursor
+from pydantic import UUID4
 
-from models.entry import Entry
+from models.entry import Entry, EntryType
 
 
 class EntriesController:
@@ -12,3 +13,14 @@ class EntriesController:
             cur.execute("SELECT * FROM entries;")
         entries = cur.fetchall()
         return entries
+
+    @staticmethod
+    def post_entry(
+        cur: cursor, entry_name: str, entry_type: EntryType
+    ) -> dict[str, UUID4]:
+        cur.execute(
+            "INSERT INTO entries (entry_name, entry_type) VALUES (%s, %s) RETURNING entry_uuid;",
+            (entry_name, entry_type),
+        )
+        response = cur.fetchone()
+        return response
