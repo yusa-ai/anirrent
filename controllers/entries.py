@@ -6,7 +6,7 @@ from models.entry import EntryIn, EntryOut, EntryType
 
 class EntriesController:
     @staticmethod
-    def get_entries(cur: cursor, entry_type: str | None = None) -> list[EntryOut]:
+    def get_entries(cur: cursor, entry_type: EntryType | None = None) -> list[EntryOut]:
         if entry_type:
             cur.execute("SELECT * FROM entries WHERE entry_type = %s;", (entry_type,))
         else:
