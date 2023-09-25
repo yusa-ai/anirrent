@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from psycopg2.extras import RealDictCursor
 
 from controllers.entries import EntriesController
-from models.entry import EntryIn, EntryOut, EntryType
+from models.entry import EntryIn, EntryOut, EntryType, EntryUUID
 
 app = FastAPI(title="Anirrent", version="1.0.0")
 
@@ -24,6 +24,6 @@ def get_entries(entry_type: EntryType | None = None) -> list[EntryOut]:
 
 
 @app.post("/v1/entries")
-def post_entry(entry: EntryIn) -> EntryOut:
+def post_entry(entry: EntryIn) -> EntryUUID:
     response = EntriesController.post_entry(conn, cur, entry)
     return response

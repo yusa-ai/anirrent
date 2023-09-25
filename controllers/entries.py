@@ -17,9 +17,9 @@ class EntriesController:
     @staticmethod
     def post_entry(conn: connection, cur: cursor, entry: EntryIn) -> EntryOut:
         cur.execute(
-            "INSERT INTO entries (entry_name, entry_type) VALUES (%s, %s) RETURNING *;",
+            "INSERT INTO entries (entry_name, entry_type) VALUES (%s, %s) RETURNING entry_uuid;",
             (entry.entry_name, entry.entry_type),
         )
         conn.commit()
-        entry = cur.fetchone()
-        return entry
+        entry_uuid = cur.fetchone()
+        return entry_uuid

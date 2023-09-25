@@ -17,3 +17,7 @@ class EntryOut(BaseModel):
     entry_uuid: UUID4
     entry_name: str
     entry_type: EntryType
+
+
+class EntryUUID(BaseModel):
+    entry_uuid: UUID4
