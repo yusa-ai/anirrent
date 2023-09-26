@@ -2,7 +2,9 @@ import psycopg2
 from fastapi import FastAPI
 from psycopg2.extras import RealDictCursor
 
-from controllers.entries import EntriesController
+from controllers.download import DownloadController
+from controllers.entry import EntryController
+from models.download import DownloadIn, DownloadUUID
 from models.entry import EntryIn, EntryOut, EntryType, EntryUUID
 
 app = FastAPI(title="Anirrent", version="1.0.0")
@@ -17,13 +19,19 @@ conn = psycopg2.connect(
 cur = conn.cursor()
 
 
+@app.post("/v1/download")
+def post_download(download: DownloadIn) -> DownloadUUID:
+    download_uuid = DownloadController.post_download(conn, cur, download)
+    return download_uuid
+
+
 @app.get("/v1/entries")
 def get_entries(entry_type: EntryType | None = None) -> list[EntryOut]:
-    entries = EntriesController.get_entries(cur, entry_type)
+    entries = EntryController.get_entries(cur, entry_type)
     return entries
 
 
 @app.post("/v1/entries")
 def post_entry(entry: EntryIn) -> EntryUUID:
-    response = EntriesController.post_entry(conn, cur, entry)
-    return response
+    entry_uuid = EntryController.post_entry(conn, cur, entry)
+    return entry_uuid
