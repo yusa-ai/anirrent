@@ -11,8 +11,8 @@ class EntryController:
             cur.execute("SELECT * FROM entries WHERE entry_type = %s;", (entry_type,))
         else:
             cur.execute("SELECT * FROM entries;")
-        entries = cur.fetchall()
-        return entries
+        response = cur.fetchall()
+        return response
 
     @staticmethod
     def post_entry(conn: connection, cur: cursor, entry: EntryIn) -> EntryUUID:
@@ -21,5 +21,5 @@ class EntryController:
             (entry.entry_name, entry.entry_type),
         )
         conn.commit()
-        entry_uuid = cur.fetchone()
-        return entry_uuid
+        response = cur.fetchone()
+        return response

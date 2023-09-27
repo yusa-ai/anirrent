@@ -1,7 +1,10 @@
+import threading
+
 from psycopg2.extensions import connection, cursor
 from pydantic import UUID4
 
 from models.download import DownloadIn, DownloadUUID
+from utils.torrent import Torrent
 
 
 class DownloadController:
@@ -18,8 +21,22 @@ class DownloadController:
         )
         cur.execute(query, params)
         conn.commit()
-        download_uuid = cur.fetchone()
+        response = cur.fetchone()
 
-        # TODO Initiate torrent download
+        if download.season and download.episode:
+            file_name = f"{download.entry_name} - S{download.season:02d}E{download.episode:02d}.mkv"
+        else:
+            file_name = f"{download.entry_name}.mkv"
 
-        return download_uuid
+        # Initiate torrent download
+        torrent = Torrent(
+            download.magnet_url,
+            file_name,
+            "./output/",
+            response["download_uuid"],
+            conn,
+            cur,
+        )
+        threading.Thread(target=torrent.download).start()
+
+        return response
