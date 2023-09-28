@@ -33,6 +33,7 @@ class Torrent:
     def download(self) -> str:
         self._handle = self._session.add_torrent(self._add_torrent_params)
 
+        self._status = self._handle.status()
         while not self._status.is_seeding:
             self._status = self._handle.status()
 

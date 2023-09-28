@@ -4,10 +4,40 @@ from psycopg2.extensions import connection, cursor
 from pydantic import UUID4
 
 from models.download import DownloadIn, DownloadUUID
+from utils.media_server import MediaServer
 from utils.torrent import Torrent
 
 
 class DownloadController:
+    @staticmethod
+    def _download_and_upload(download, response, conn, cur):
+        tv_show = download.season and download.episode
+
+        if tv_show:
+            file_name = f"{download.entry_name} - S{download.season:02d}E{download.episode:02d}.mkv"
+        else:
+            file_name = f"{download.entry_name}.mkv"
+
+        torrent = Torrent(
+            download.magnet_url,
+            file_name,
+            "./output/",
+            response["download_uuid"],
+            conn,
+            cur,
+        )
+
+        destination_folder = "anime" if tv_show else "anime_movies"
+        remote_path = f"Disque 1/{destination_folder}/{download.entry_name}"
+
+        file_path = torrent.download()
+        MediaServer.upload(file_path=file_path, remote_path=remote_path)
+
+        query = "UPDATE uploads SET status = 'COMPLETE' WHERE download_uuid = %s;"
+        params = (response["download_uuid"],)
+        cur.execute(query, params)
+        conn.commit()
+
     @staticmethod
     def post_download(
         conn: connection, cur: cursor, download: DownloadIn
@@ -23,20 +53,9 @@ class DownloadController:
         conn.commit()
         response = cur.fetchone()
 
-        if download.season and download.episode:
-            file_name = f"{download.entry_name} - S{download.season:02d}E{download.episode:02d}.mkv"
-        else:
-            file_name = f"{download.entry_name}.mkv"
-
-        # Initiate torrent download
-        torrent = Torrent(
-            download.magnet_url,
-            file_name,
-            "./output/",
-            response["download_uuid"],
-            conn,
-            cur,
-        )
-        threading.Thread(target=torrent.download).start()
+        threading.Thread(
+            target=DownloadController._download_and_upload,
+            args=(download, response, conn, cur),
+        ).start()
 
         return response
