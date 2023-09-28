@@ -3,12 +3,20 @@ import threading
 from psycopg2.extensions import connection, cursor
 from pydantic import UUID4
 
-from models.download import DownloadIn, DownloadUUID
+from models.download import DownloadIn, DownloadOut, DownloadUUID
 from utils.media_server import MediaServer
 from utils.torrent import Torrent
 
 
 class DownloadController:
+    @staticmethod
+    def get_download(cur: cursor, download_uuid: UUID4) -> DownloadOut:
+        query = "SELECT * FROM downloads WHERE download_uuid = %s;"
+        params = (download_uuid,)
+        cur.execute(query, params)
+        response = cur.fetchone()
+        return response
+
     @staticmethod
     def _download_and_upload(download, response, conn, cur):
         tv_show = download.season and download.episode
