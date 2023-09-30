@@ -1,5 +1,5 @@
 import os
-from ftplib import FTP
+from ftplib import FTP, error_perm
 
 
 class MediaServer:
@@ -15,6 +15,12 @@ class MediaServer:
         with FTP(host=host, user=user, passwd=passwd) as ftp, open(
             file_path, "rb"
         ) as file:
+            # Create directory if it doesn't exist
+            try:
+                ftp.cwd(remote_path)
+            except error_perm:
+                ftp.mkd(remote_path)
+
             ftp.cwd(remote_path)
             ftp.storbinary(f"STOR {os.path.basename(file_path)}", file)
 
