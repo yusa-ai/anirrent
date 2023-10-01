@@ -22,5 +22,6 @@ class DownloadOut(BaseModel):
     status: DownloadStatus
 
 
-class DownloadUUID(BaseModel):
+class DownloadCreatedOut(BaseModel):
     download_uuid: UUID4
+    file_name: str

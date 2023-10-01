@@ -3,7 +3,7 @@ import threading
 from psycopg2.extensions import connection, cursor
 from pydantic import UUID4
 
-from models.download import DownloadIn, DownloadOut, DownloadUUID
+from models.download import DownloadCreatedOut, DownloadIn, DownloadOut
 from utils.media_server import MediaServer
 from utils.torrent import Torrent
 
@@ -18,17 +18,10 @@ class DownloadController:
         return response
 
     @staticmethod
-    def _download_and_upload(download, response, conn, cur):
-        tv_show = download.season and download.episode
-
-        if tv_show:
-            file_name = f"{download.entry_name} - S{download.season:02d}E{download.episode:02d}.mkv"
-        else:
-            file_name = f"{download.entry_name}.mkv"
-
+    def _download_and_upload(download, response, tv_show, conn, cur):
         torrent = Torrent(
             download.magnet_url,
-            file_name,
+            response["file_name"],
             "./output/",
             response["download_uuid"],
             conn,
@@ -49,13 +42,21 @@ class DownloadController:
     @staticmethod
     def post_download(
         conn: connection, cur: cursor, download: DownloadIn
-    ) -> DownloadUUID:
-        query = "INSERT INTO downloads (magnet_url, entry_name, season, episode) VALUES (%s, %s, %s, %s) RETURNING download_uuid;"
+    ) -> DownloadCreatedOut:
+        tv_show = download.season and download.episode
+
+        if tv_show:
+            file_name = f"{download.entry_name} - S{download.season:02d}E{download.episode:02d}.mkv"
+        else:
+            file_name = f"{download.entry_name}.mkv"
+
+        query = "INSERT INTO downloads (magnet_url, entry_name, season, episode, file_name) VALUES (%s, %s, %s, %s, %s) RETURNING download_uuid, file_name;"
         params = (
             download.magnet_url,
             download.entry_name,
             download.season,
             download.episode,
+            file_name,
         )
         cur.execute(query, params)
         conn.commit()
@@ -63,7 +64,7 @@ class DownloadController:
 
         threading.Thread(
             target=DownloadController._download_and_upload,
-            args=(download, response, conn, cur),
+            args=(download, response, tv_show, conn, cur),
         ).start()
 
         return response

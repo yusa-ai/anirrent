@@ -6,7 +6,7 @@ from psycopg2.extras import RealDictCursor
 from controllers.download import DownloadController
 from controllers.entry import EntryController
 from controllers.upload import UploadController
-from models.download import DownloadIn, DownloadOut, DownloadUUID
+from models.download import DownloadCreatedOut, DownloadIn, DownloadOut
 from models.entry import EntryIn, EntryOut, EntryType, EntryUUID
 from models.upload import UploadOut
 
@@ -35,7 +35,7 @@ def get_download(download_uuid: str) -> DownloadOut:
 
 
 @app.post("/v1/download")
-def post_download(download: DownloadIn) -> DownloadUUID:
+def post_download(download: DownloadIn) -> DownloadCreatedOut:
     download_uuid = DownloadController.post_download(conn, cur, download)
     return download_uuid
 
