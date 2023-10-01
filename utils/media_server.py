@@ -20,8 +20,8 @@ class MediaServer:
                 ftp.cwd(remote_path)
             except error_perm:
                 ftp.mkd(remote_path)
+                ftp.cwd(remote_path)
 
-            ftp.cwd(remote_path)
             ftp.storbinary(f"STOR {os.path.basename(file_path)}", file)
 
         os.remove(file_path)
