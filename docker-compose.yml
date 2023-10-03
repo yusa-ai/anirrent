@@ -1,0 +1,11 @@
+version: '3.3'
+services:
+    anirrent-api:
+        container_name: anirrent-api
+        volumes:
+            - './output:/output'
+        restart: unless-stopped
+        ports:
+            - '8000:8000'
+        image: anirrent-api
+        env_file: .env.local
