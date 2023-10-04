@@ -45,6 +45,19 @@ class DownloadController:
     ) -> DownloadCreatedOut:
         tv_show = download.season and download.episode
 
+        # Remove illegal filename characters
+        download.entry_name = (
+            download.entry_name.replace(":", "")
+            .replace("?", "")
+            .replace("/", "")
+            .replace("\\", "")
+            .replace("*", "")
+            .replace('"', "")
+            .replace("<", "")
+            .replace(">", "")
+            .replace("|", "")
+        )
+
         if tv_show:
             file_name = f"{download.entry_name} - S{download.season:02d}E{download.episode:02d}.mkv"
         else:
